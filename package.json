@@ -1,0 +1,11 @@
+{
+  "name": "nutrition-tracker-wpk8n",
+  "version": "1.0.0",
+  "description": "A free, ad-free nutrition tracker that extracts nutrition data from product photos",
+  "type": "module",
+  "scripts": {
+    "test": "node --test"
+  },
+  "keywords": ["nutrition", "tracker", "ocr", "meal-planning"],
+  "license": "MIT"
+}
