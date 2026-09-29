@@ -1,35 +1,31 @@
-/**
- * Meal planning management using storage abstraction.
- * Provides create, add product, get, and getAll operations for meals.
- */
+import { store } from './storage.js';
 
-import { getItem, setItem } from './storage.js';
-
-const STORAGE_KEY = 'nutrition_tracker_meals';
+const MEALS_KEY = 'nutrition-tracker-meals';
 
 /**
- * Get all meals from storage.
+ * Get all meals from storage
  * @returns {Array} Array of meal objects
  */
 function getAllMealsFromStorage() {
+  const raw = store.getItem(MEALS_KEY);
+  if (!raw) return [];
   try {
-    const data = getItem(STORAGE_KEY);
-    return data ? JSON.parse(data) : [];
+    return JSON.parse(raw);
   } catch {
     return [];
   }
 }
 
 /**
- * Save meals to storage.
+ * Save all meals to storage
  * @param {Array} meals - Array of meal objects
  */
-function saveMealsToStorage(meals) {
-  setItem(STORAGE_KEY, JSON.stringify(meals));
+function saveAllMealsToStorage(meals) {
+  store.setItem(MEALS_KEY, JSON.stringify(meals));
 }
 
 /**
- * Generate a unique ID.
+ * Generate a unique ID
  * @returns {string} Unique ID
  */
 function generateId() {
@@ -37,76 +33,68 @@ function generateId() {
 }
 
 /**
- * Create a new meal.
+ * Create a new meal
  * @param {string} name - Meal name
  * @param {string} date - Meal date (ISO string)
  * @returns {string} Meal ID
  */
 export function createMeal(name, date) {
   const meals = getAllMealsFromStorage();
+  const id = generateId();
   const meal = {
-    id: generateId(),
-    name: name || 'Untitled Meal',
-    date: date || new Date().toISOString(),
+    id,
+    name,
+    date: date || new Date().toISOString().split('T')[0],
     items: []
   };
   meals.push(meal);
-  saveMealsToStorage(meals);
-  return meal.id;
+  saveAllMealsToStorage(meals);
+  return id;
 }
 
 /**
- * Add a product to a meal.
+ * Add a product to a meal
  * @param {string} mealId - Meal ID
  * @param {string} productId - Product ID
- * @param {number} amount - Amount in grams
- * @param {string} unit - Unit (default: 'g')
- * @returns {Object} MealItem object
+ * @param {number} amount - Amount to add
+ * @param {string} unit - Unit of measurement
+ * @returns {Object} The added meal item
  */
-export function addProductToMeal(mealId, productId, amount, unit = 'g') {
+export function addProductToMeal(mealId, productId, amount, unit) {
   const meals = getAllMealsFromStorage();
   const mealIndex = meals.findIndex(m => m.id === mealId);
-
   if (mealIndex === -1) {
     throw new Error(`Meal with ID ${mealId} not found`);
   }
 
   const meal = meals[mealIndex];
 
-  // Check if product is already in this meal
+  // Check if product already exists in meal
   const existingItemIndex = meal.items.findIndex(
-    item => item.productId === productId
+    item => item.productId === productId && item.unit === unit
   );
 
-  const mealItem = {
-    productId,
-    amount: Number(amount) || 0,
-    unit: unit || 'g',
-    nutrition: {
-      energy: { kcal: 0, kj: 0 },
-      fat: 0,
-      saturatedFat: 0,
-      carbs: 0,
-      sugars: 0,
-      protein: 0,
-      salt: 0
-    }
-  };
-
   if (existingItemIndex >= 0) {
-    meal.items[existingItemIndex] = mealItem;
+    // Update existing item amount
+    meal.items[existingItemIndex].amount += amount;
   } else {
-    meal.items.push(mealItem);
+    // Add new item
+    meal.items.push({
+      productId,
+      amount,
+      unit: unit || 'g',
+      nutrition: {}
+    });
   }
 
-  saveMealsToStorage(meals);
-  return mealItem;
+  saveAllMealsToStorage(meals);
+  return meal.items[existingItemIndex >= 0 ? existingItemIndex : meal.items.length - 1];
 }
 
 /**
- * Get a meal by ID.
+ * Get a meal by ID
  * @param {string} id - Meal ID
- * @returns {Object|null} Meal object or null if not found
+ * @returns {Object|null} Meal object or null
  */
 export function getMeal(id) {
   const meals = getAllMealsFromStorage();
@@ -114,9 +102,52 @@ export function getMeal(id) {
 }
 
 /**
- * Get all meals.
- * @returns {Array} Array of all meals
+ * Get all meals
+ * @returns {Array} Array of all meal objects
  */
 export function getAllMeals() {
   return getAllMealsFromStorage();
+}
+
+/**
+ * Delete a meal by ID
+ * @param {string} id - Meal ID
+ * @returns {boolean} Whether the meal was deleted
+ */
+export function deleteMeal(id) {
+  const meals = getAllMealsFromStorage();
+  const filtered = meals.filter(m => m.id !== id);
+  if (filtered.length === meals.length) {
+    return false;
+  }
+  saveAllMealsToStorage(filtered);
+  return true;
+}
+
+/**
+ * Remove an item from a meal
+ * @param {string} mealId - Meal ID
+ * @param {string} productId - Product ID
+ * @param {string} unit - Unit of measurement
+ * @returns {boolean} Whether the item was removed
+ */
+export function removeProductFromMeal(mealId, productId, unit) {
+  const meals = getAllMealsFromStorage();
+  const mealIndex = meals.findIndex(m => m.id === mealId);
+  if (mealIndex === -1) {
+    return false;
+  }
+
+  const meal = meals[mealIndex];
+  const itemIndex = meal.items.findIndex(
+    item => item.productId === productId && item.unit === unit
+  );
+
+  if (itemIndex === -1) {
+    return false;
+  }
+
+  meal.items.splice(itemIndex, 1);
+  saveAllMealsToStorage(meals);
+  return true;
 }
