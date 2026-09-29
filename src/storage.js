@@ -1,35 +1,27 @@
 // Unified storage abstraction working in both browser (localStorage) and Node.js (in-memory Map)
-const isBrowser = typeof window !== 'undefined';
+const isBrowser = typeof window !== 'undefined' && typeof localStorage !== 'undefined';
 
-const store = {
-  _data: new Map(),
+const store = new Map();
+
+export const storage = {
   getItem(key) {
     if (isBrowser) {
       return localStorage.getItem(key);
     }
-    return this._data.get(key) || null;
+    return store.get(key) || null;
   },
   setItem(key, value) {
     if (isBrowser) {
       localStorage.setItem(key, value);
     } else {
-      this._data.set(key, value);
+      store.set(key, value);
     }
   },
   removeItem(key) {
     if (isBrowser) {
       localStorage.removeItem(key);
     } else {
-      this._data.delete(key);
-    }
-  },
-  clear() {
-    if (isBrowser) {
-      localStorage.clear();
-    } else {
-      this._data.clear();
+      store.delete(key);
     }
   }
 };
-
-export { store };
