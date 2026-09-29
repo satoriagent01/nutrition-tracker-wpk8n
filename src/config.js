@@ -3,7 +3,7 @@
  * Stores AI endpoint configuration and custom nutrients.
  */
 
-import { getItem, setItem, removeItem } from './storage.js';
+import { getItem, setItem } from './storage.js';
 
 const STORAGE_KEY = 'nutrition_tracker_config';
 
@@ -51,5 +51,5 @@ export function saveConfig(config) {
  * Reset configuration to defaults.
  */
 export function resetConfig() {
-  removeItem(STORAGE_KEY);
+  setItem(STORAGE_KEY, JSON.stringify(DEFAULT_CONFIG));
 }
