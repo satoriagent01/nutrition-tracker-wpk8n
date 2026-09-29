@@ -1,35 +1,31 @@
-/**
- * Product database management using storage abstraction.
- * Provides save, get, and getAll operations for products.
- */
+import { store } from './storage.js';
 
-import { getItem, setItem } from './storage.js';
-
-const STORAGE_KEY = 'nutrition_tracker_products';
+const PRODUCTS_KEY = 'nutrition-tracker-products';
 
 /**
- * Get all products from storage.
+ * Get all products from storage
  * @returns {Array} Array of product objects
  */
 function getAllProductsFromStorage() {
+  const raw = store.getItem(PRODUCTS_KEY);
+  if (!raw) return [];
   try {
-    const data = getItem(STORAGE_KEY);
-    return data ? JSON.parse(data) : [];
+    return JSON.parse(raw);
   } catch {
     return [];
   }
 }
 
 /**
- * Save products to storage.
+ * Save all products to storage
  * @param {Array} products - Array of product objects
  */
-function saveProductsToStorage(products) {
-  setItem(STORAGE_KEY, JSON.stringify(products));
+function saveAllProductsToStorage(products) {
+  store.setItem(PRODUCTS_KEY, JSON.stringify(products));
 }
 
 /**
- * Generate a unique ID.
+ * Generate a unique ID
  * @returns {string} Unique ID
  */
 function generateId() {
@@ -37,46 +33,45 @@ function generateId() {
 }
 
 /**
- * Save a product to the database.
- * @param {Object} product - Product object with id, name, brand, servingSize, servingUnit, nutritionPerServing, imageUrl
+ * Save a product to the database
+ * @param {Object} product - Product object
+ * @param {string} product.name - Product name
+ * @param {string} product.brand - Brand name
+ * @param {string} product.servingSize - Serving size value
+ * @param {string} product.servingUnit - Serving unit (e.g., 'g', 'ml', 'piece')
+ * @param {Object} product.nutritionPerServing - Nutrition per serving
+ * @param {string} [product.imageUrl] - Optional image URL
  * @returns {string} Product ID
  */
 export function saveProduct(product) {
   const products = getAllProductsFromStorage();
-  const productWithId = {
-    id: product.id || generateId(),
-    name: product.name || 'Unknown',
+  const id = product.id || generateId();
+  const newProduct = {
+    id,
+    name: product.name,
     brand: product.brand || '',
-    servingSize: product.servingSize || 1,
+    servingSize: product.servingSize || '100',
     servingUnit: product.servingUnit || 'g',
-    nutritionPerServing: product.nutritionPerServing || {
-      energy: 0,
-      fat: 0,
-      saturatedFat: 0,
-      carbs: 0,
-      sugars: 0,
-      protein: 0,
-      salt: 0
-    },
+    nutritionPerServing: product.nutritionPerServing || {},
     imageUrl: product.imageUrl || ''
   };
 
-  // Check if product with same ID exists, update it
-  const existingIndex = products.findIndex(p => p.id === productWithId.id);
+  // Update existing or add new
+  const existingIndex = products.findIndex(p => p.id === id);
   if (existingIndex >= 0) {
-    products[existingIndex] = productWithId;
+    products[existingIndex] = newProduct;
   } else {
-    products.push(productWithId);
+    products.push(newProduct);
   }
 
-  saveProductsToStorage(products);
-  return productWithId.id;
+  saveAllProductsToStorage(products);
+  return id;
 }
 
 /**
- * Get a product by ID.
+ * Get a product by ID
  * @param {string} id - Product ID
- * @returns {Object|null} Product object or null if not found
+ * @returns {Object|null} Product object or null
  */
 export function getProduct(id) {
   const products = getAllProductsFromStorage();
@@ -84,9 +79,24 @@ export function getProduct(id) {
 }
 
 /**
- * Get all products.
- * @returns {Array} Array of all products
+ * Get all products
+ * @returns {Array} Array of all product objects
  */
 export function getAllProducts() {
   return getAllProductsFromStorage();
+}
+
+/**
+ * Delete a product by ID
+ * @param {string} id - Product ID
+ * @returns {boolean} Whether the product was deleted
+ */
+export function deleteProduct(id) {
+  const products = getAllProductsFromStorage();
+  const filtered = products.filter(p => p.id !== id);
+  if (filtered.length === products.length) {
+    return false;
+  }
+  saveAllProductsToStorage(filtered);
+  return true;
 }
