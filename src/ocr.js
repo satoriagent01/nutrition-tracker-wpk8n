@@ -61,26 +61,32 @@ export async function extractNutrition(imageData, config = {}) {
       if (jsonMatch) {
         const parsed = JSON.parse(jsonMatch[0]);
         return {
-          energy: parsed.energy || 0,
+          energy: { kcal: parsed.energy || 0, kj: (parsed.energy || 0) * 4.184 },
           fat: parsed.fat || 0,
           saturatedFat: parsed.saturatedFat || 0,
           carbs: parsed.carbs || 0,
           sugars: parsed.sugars || 0,
           protein: parsed.protein || 0,
           salt: parsed.salt || 0,
-          servingSize: parsed.servingSize || 100,
-          servingUnit: parsed.servingUnit || 'g'
+          servingSize: { amount: parsed.servingSize || 100, unit: parsed.servingUnit || 'g' },
+          per100g: {
+            energy: { kcal: parsed.energy || 0, kj: (parsed.energy || 0) * 4.184 },
+            fat: parsed.fat || 0,
+            saturatedFat: parsed.saturatedFat || 0,
+            carbs: parsed.carbs || 0,
+            sugars: parsed.sugars || 0,
+            protein: parsed.protein || 0,
+            salt: parsed.salt || 0
+          }
         };
       }
     } catch (parseError) {
-      // Fall back to mock data if parsing fails
-      console.warn('Failed to parse API response, using mock data:', parseError);
+      // Fall through to mock data
     }
 
-    return getMockNutritionData(imageData);
+    throw new Error('Failed to parse OCR response');
   } catch (error) {
-    console.error('OCR extraction failed:', error);
-    return getMockNutritionData(imageData);
+    throw error;
   }
 }
 
@@ -90,52 +96,44 @@ export async function extractNutrition(imageData, config = {}) {
  * @returns {Object} Mock nutrition data
  */
 function getMockNutritionData(imageData) {
-  // Create a simple hash from the image data
+  // Use the image data hash to generate consistent mock data
   let hash = 0;
-  const str = imageData || 'default';
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
+  for (let i = 0; i < imageData.length; i++) {
+    hash = ((hash << 5) - hash) + imageData.charCodeAt(i);
     hash = hash & hash; // Convert to 32bit integer
   }
 
-  // Use hash to generate consistent mock data
   const absHash = Math.abs(hash);
-  const mockData = [
-    {
-      energy: 250,
-      fat: 12,
-      saturatedFat: 3,
-      carbs: 30,
-      sugars: 15,
-      protein: 5,
-      salt: 0.5,
-      servingSize: 100,
-      servingUnit: 'g'
-    },
-    {
-      energy: 180,
-      fat: 8,
-      saturatedFat: 2,
-      carbs: 22,
-      sugars: 10,
-      protein: 3,
-      salt: 0.3,
-      servingSize: 50,
-      servingUnit: 'g'
-    },
-    {
-      energy: 320,
-      fat: 15,
-      saturatedFat: 5,
-      carbs: 35,
-      sugars: 20,
-      protein: 8,
-      salt: 0.7,
-      servingSize: 150,
-      servingUnit: 'g'
-    }
-  ];
 
-  return mockData[absHash % mockData.length];
+  // Generate consistent mock data based on hash
+  const mockData = {
+    energy: {
+      kcal: 100 + (absHash % 400),
+      kj: (100 + (absHash % 400)) * 4.184
+    },
+    fat: 5 + (absHash % 20),
+    saturatedFat: 1 + (absHash % 8),
+    carbs: 10 + (absHash % 40),
+    sugars: 5 + (absHash % 25),
+    protein: 2 + (absHash % 15),
+    salt: 0.1 + (absHash % 10) / 10,
+    servingSize: {
+      amount: 50 + (absHash % 150),
+      unit: absHash % 2 === 0 ? 'g' : 'ml'
+    },
+    per100g: {
+      energy: {
+        kcal: 100 + (absHash % 400),
+        kj: (100 + (absHash % 400)) * 4.184
+      },
+      fat: 5 + (absHash % 20),
+      saturatedFat: 1 + (absHash % 8),
+      carbs: 10 + (absHash % 40),
+      sugars: 5 + (absHash % 25),
+      protein: 2 + (absHash % 15),
+      salt: 0.1 + (absHash % 10) / 10
+    }
+  };
+
+  return mockData;
 }
