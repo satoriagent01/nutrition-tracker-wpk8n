@@ -1,20 +1,14 @@
 /**
- * Nutrition calculation module.
- * Calculates nutrition based on product data and amounts.
+ * Calculate nutrition based on product and amount
+ * @param {Object} product - Product object with nutritionPerServing
+ * @param {number} amount - Amount to calculate for
+ * @param {string} unit - Unit of measurement
+ * @returns {Object} Nutrition data scaled to the amount
  */
-
-/**
- * Calculate nutrition for a product with a given amount.
- * Uses per100g data if available, otherwise uses the product's own nutrition values.
- * @param {Object} product - Product object with energy, fat, saturatedFat, carbs, sugars, protein, salt, servingSize, per100g
- * @param {number} amount - Amount in grams or ml
- * @param {string} unit - Unit (default: 'g')
- * @returns {Object} NutritionData object with energy (kcal, kj), fat, saturatedFat, carbs, sugars, protein, salt
- */
-export function calculateNutrition(product, amount, unit = 'g') {
-  if (!product) {
+export function calculateNutrition(product, amount, unit) {
+  if (!product || !product.nutritionPerServing) {
     return {
-      energy: { kcal: 0, kj: 0 },
+      energy: 0,
       fat: 0,
       saturatedFat: 0,
       carbs: 0,
@@ -24,61 +18,41 @@ export function calculateNutrition(product, amount, unit = 'g') {
     };
   }
 
-  const servingSize = product.servingSize;
-  const servingAmount = servingSize?.amount || 100;
-  const servingUnit = servingSize?.unit || 'g';
-
-  // Use per100g data if available, otherwise use the product's own values
-  const hasPer100g = product.per100g && product.per100g.energy;
-
-  let ratio;
-  if (hasPer100g) {
-    // per100g is always per 100g, so ratio is amount / 100
-    ratio = amount / 100;
+  const servingSize = parseFloat(product.servingSize) || 100;
+  const servingUnit = product.servingUnit || 'g';
+  
+  // If units match, calculate ratio directly
+  let ratio = 1;
+  if (unit === servingUnit) {
+    ratio = amount / servingSize;
   } else {
-    // Use the product's serving size
-    ratio = amount / servingAmount;
+    // For different units, assume 1:1 conversion (simplified)
+    // In a real app, you'd have conversion factors
+    ratio = amount / servingSize;
   }
 
-  if (hasPer100g) {
-    return {
-      energy: {
-        kcal: product.per100g.energy.kcal * ratio,
-        kj: product.per100g.energy.kj * ratio
-      },
-      fat: product.per100g.fat * ratio,
-      saturatedFat: product.per100g.saturatedFat * ratio,
-      carbs: product.per100g.carbs * ratio,
-      sugars: product.per100g.sugars * ratio,
-      protein: product.per100g.protein * ratio,
-      salt: product.per100g.salt * ratio
-    };
-  }
-
+  const nutrition = product.nutritionPerServing;
   return {
-    energy: {
-      kcal: product.energy.kcal * ratio,
-      kj: product.energy.kj * ratio
-    },
-    fat: product.fat * ratio,
-    saturatedFat: product.saturatedFat * ratio,
-    carbs: product.carbs * ratio,
-    sugars: product.sugars * ratio,
-    protein: product.protein * ratio,
-    salt: product.salt * ratio
+    energy: Math.round((nutrition.energy || 0) * ratio * 10) / 10,
+    fat: Math.round((nutrition.fat || 0) * ratio * 10) / 10,
+    saturatedFat: Math.round((nutrition.saturatedFat || 0) * ratio * 10) / 10,
+    carbs: Math.round((nutrition.carbs || 0) * ratio * 10) / 10,
+    sugars: Math.round((nutrition.sugars || 0) * ratio * 10) / 10,
+    protein: Math.round((nutrition.protein || 0) * ratio * 10) / 10,
+    salt: Math.round((nutrition.salt || 0) * ratio * 10) / 10
   };
 }
 
 /**
- * Calculate total nutrition for a meal.
- * @param {Object} meal - Meal object with items array
- * @param {Array} products - Array of product objects to look up by productId
- * @returns {Object} Total nutrition data with energy (kcal, kj), fat, saturatedFat, carbs, sugars, protein, salt
+ * Calculate total nutrition for a meal
+ * @param {Object} meal - Meal object with items
+ * @param {Function} getProduct - Function to get product by ID
+ * @returns {Object} Total nutrition data
  */
-export function calculateMealTotal(meal, products) {
+export function calculateMealTotal(meal, getProduct) {
   if (!meal || !meal.items) {
     return {
-      energy: { kcal: 0, kj: 0 },
+      energy: 0,
       fat: 0,
       saturatedFat: 0,
       carbs: 0,
@@ -88,8 +62,8 @@ export function calculateMealTotal(meal, products) {
     };
   }
 
-  let total = {
-    energy: { kcal: 0, kj: 0 },
+  const totals = {
+    energy: 0,
     fat: 0,
     saturatedFat: 0,
     carbs: 0,
@@ -99,21 +73,29 @@ export function calculateMealTotal(meal, products) {
   };
 
   for (const item of meal.items) {
-    if (item.productId) {
-      const product = products?.find(p => p.name === item.productId) || products?.find(p => p.id === item.productId);
+    if (item.productId && getProduct) {
+      const product = getProduct(item.productId);
       if (product) {
         const nutrition = calculateNutrition(product, item.amount, item.unit);
-        total.energy.kcal += nutrition.energy.kcal;
-        total.energy.kj += nutrition.energy.kj;
-        total.fat += nutrition.fat;
-        total.saturatedFat += nutrition.saturatedFat;
-        total.carbs += nutrition.carbs;
-        total.sugars += nutrition.sugars;
-        total.protein += nutrition.protein;
-        total.salt += nutrition.salt;
+        totals.energy += nutrition.energy;
+        totals.fat += nutrition.fat;
+        totals.saturatedFat += nutrition.saturatedFat;
+        totals.carbs += nutrition.carbs;
+        totals.sugars += nutrition.sugars;
+        totals.protein += nutrition.protein;
+        totals.salt += nutrition.salt;
       }
     }
   }
 
-  return total;
+  // Round all values
+  return {
+    energy: Math.round(totals.energy * 10) / 10,
+    fat: Math.round(totals.fat * 10) / 10,
+    saturatedFat: Math.round(totals.saturatedFat * 10) / 10,
+    carbs: Math.round(totals.carbs * 10) / 10,
+    sugars: Math.round(totals.sugars * 10) / 10,
+    protein: Math.round(totals.protein * 10) / 10,
+    salt: Math.round(totals.salt * 10) / 10
+  };
 }
