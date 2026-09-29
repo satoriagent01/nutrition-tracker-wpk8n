@@ -1,55 +1,38 @@
-/**
- * User configuration management using storage abstraction.
- * Stores AI endpoint configuration and custom nutrients.
- */
+import { store } from './storage.js';
 
-import { getItem, setItem } from './storage.js';
-
-const STORAGE_KEY = 'nutrition_tracker_config';
+const CONFIG_KEY = 'nutrition-tracker-config';
 
 /**
- * Default configuration.
- */
-const DEFAULT_CONFIG = {
-  aiEndpoint: '',
-  aiApiKey: '',
-  defaultUnit: 'g',
-  customNutrients: []
-};
-
-/**
- * Get the current configuration.
- * @returns {Object} Configuration object
- */
-export function getConfig() {
-  try {
-    const data = getItem(STORAGE_KEY);
-    if (data) {
-      return { ...DEFAULT_CONFIG, ...JSON.parse(data) };
-    }
-  } catch (e) {
-    console.error('Failed to read config:', e);
-  }
-  return { ...DEFAULT_CONFIG };
-}
-
-/**
- * Save configuration.
- * @param {Object} config - Configuration object
+ * Save user configuration
+ * @param {Object} config - User configuration
+ * @param {string} config.aiEndpoint - AI endpoint URL
+ * @param {string} config.aiKey - AI API key
+ * @param {string[]} config.customNutrients - Custom nutrient names
  */
 export function saveConfig(config) {
-  try {
-    const currentConfig = getConfig();
-    const mergedConfig = { ...currentConfig, ...config };
-    setItem(STORAGE_KEY, JSON.stringify(mergedConfig));
-  } catch (e) {
-    console.error('Failed to save config:', e);
-  }
+  store.setItem(CONFIG_KEY, JSON.stringify(config));
 }
 
 /**
- * Reset configuration to defaults.
+ * Get user configuration
+ * @returns {Object} User configuration with defaults
  */
-export function resetConfig() {
-  setItem(STORAGE_KEY, JSON.stringify(DEFAULT_CONFIG));
+export function getConfig() {
+  const raw = store.getItem(CONFIG_KEY);
+  if (!raw) {
+    return {
+      aiEndpoint: '',
+      aiKey: '',
+      customNutrients: []
+    };
+  }
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return {
+      aiEndpoint: '',
+      aiKey: '',
+      customNutrients: []
+    };
+  }
 }
