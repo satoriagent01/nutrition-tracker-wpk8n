@@ -82,19 +82,24 @@ export function addProductToMeal(mealId, productId, amount, unit = 'g') {
     productId,
     amount: Number(amount) || 0,
     unit: unit || 'g',
-    nutrition: {} // Will be calculated by the frontend or nutrition module
+    nutrition: {
+      energy: { kcal: 0, kj: 0 },
+      fat: 0,
+      saturatedFat: 0,
+      carbs: 0,
+      sugars: 0,
+      protein: 0,
+      salt: 0
+    }
   };
 
   if (existingItemIndex >= 0) {
-    // Update existing item
     meal.items[existingItemIndex] = mealItem;
   } else {
     meal.items.push(mealItem);
   }
 
-  meals[mealIndex] = meal;
   saveMealsToStorage(meals);
-
   return mealItem;
 }
 
@@ -110,23 +115,8 @@ export function getMeal(id) {
 
 /**
  * Get all meals.
- * @returns {Array} Array of all meal objects
+ * @returns {Array} Array of all meals
  */
 export function getAllMeals() {
   return getAllMealsFromStorage();
-}
-
-/**
- * Delete a meal by ID.
- * @param {string} id - Meal ID
- * @returns {boolean} True if deleted, false if not found
- */
-export function deleteMeal(id) {
-  const meals = getAllMealsFromStorage();
-  const filtered = meals.filter(m => m.id !== id);
-  if (filtered.length === meals.length) {
-    return false;
-  }
-  saveMealsToStorage(filtered);
-  return true;
 }
