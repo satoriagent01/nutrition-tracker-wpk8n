@@ -85,23 +85,8 @@ export function getProduct(id) {
 
 /**
  * Get all products.
- * @returns {Array} Array of all product objects
+ * @returns {Array} Array of all products
  */
 export function getAllProducts() {
   return getAllProductsFromStorage();
-}
-
-/**
- * Delete a product by ID.
- * @param {string} id - Product ID
- * @returns {boolean} True if deleted, false if not found
- */
-export function deleteProduct(id) {
-  const products = getAllProductsFromStorage();
-  const filtered = products.filter(p => p.id !== id);
-  if (filtered.length === products.length) {
-    return false;
-  }
-  saveProductsToStorage(filtered);
-  return true;
 }
