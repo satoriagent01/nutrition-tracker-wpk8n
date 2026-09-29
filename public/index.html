@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nutrition Tracker</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; color: #333; line-height: 1.6; }
+    .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+    h1 { text-align: center; margin-bottom: 20px; color: #2c3e50; }
+    h2 { margin-bottom: 10px; color: #34495e; }
+    .section { background: white; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .btn { background: #3498db; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-size: 16px; }
+    .btn:hover { background: #2980b9; }
+    .btn-danger { background: #e74c3c; }
+    .btn-danger:hover { background: #c0392b; }
+    .btn-success { background: #27ae60; }
+    .btn-success:hover { background: #219a52; }
+    input, select, textarea { width: 100%; padding: 8px; margin: 5px 0 15px; border: 1px solid #ddd; border-radius: 4px; }
+    .product-item, .meal-item { border: 1px solid #eee; padding: 10px; margin-bottom: 10px; border-radius: 4px; }
+    .nutrition-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px; }
+    .nutrition-item { background: #f8f9fa; padding: 10px; border-radius: 4px; text-align: center; }
+    .nutrition-value { font-size: 24px; font-weight: bold; color: #2c3e50; }
+    .nutrition-label { font-size: 12px; color: #7f8c8d; }
+    .hidden { display: none; }
+    .tab-container { display: flex; gap: 10px; margin-bottom: 20px; }
+    .tab { padding: 10px 20px; background: #ecf0f1; border: none; cursor: pointer; border-radius: 4px 4px 0 0; }
+    .tab.active { background: #3498db; color: white; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .form-row { display: flex; gap: 10px; }
+    .form-row > * { flex: 1; }
+    .meal-summary { background: #e8f5e9; padding: 15px; border-radius: 4px; margin-top: 15px; }
+    .product-list { max-height: 300px; overflow-y: auto; }
+    .add-product-form { background: #f8f9fa; padding: 15px; border-radius: 4px; margin-top: 15px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🥗 Nutrition Tracker</h1>
+    
+    <div class="tab-container">
+      <button class="tab active" onclick="showTab('products')">Products</button>
+      <button class="tab" onclick="showTab('meals')">Meals</button>
+      <button class="tab" onclick="showTab('config')">Config</button>
+    </div>
+
+    <!-- Products Tab -->
+    <div id="products-tab" class="tab-content active">
+      <div class="section">
+        <h2>Add Product</h2>
+        <div class="form-row">
+          <button class="btn" onclick="document.getElementById('fileInput').click()">📷 Take Photo</button>
+          <input type="file" id="fileInput" accept="image/*" capture="environment" style="display:none" onchange="handlePhotoUpload(event)">
+        </div>
+        <div id="photoPreview" class="hidden" style="margin: 10px 0;">
+          <img id="previewImg" style="max-width: 100%; max-height: 200px; border-radius: 4px;">
+        </div>
+        <input type="text" id="productName" placeholder="Product name">
+        <input type="text" id="productBrand" placeholder="Brand">
+        <div class="form-row">
+          <input type="number" id="servingAmount" placeholder="Serving size amount">
+          <input type="text" id="servingUnit" placeholder="Unit (g/ml)">
+        </div>
+        <div class="form-row">
+          <input type="number" id="energyKcal" placeholder="Energy (kcal)">
+          <input type="number" id="energyKj" placeholder="Energy (kJ)">
+        </div>
+        <div class="form-row">
+          <input type="number" id="fat" placeholder="Fat (g)">
+          <input type="number" id="saturatedFat" placeholder="Saturated Fat (g)">
+        </div>
+        <div class="form-row">
+          <input type="number" id="carbs" placeholder="Carbs (g)">
+          <input type="number" id="sugars" placeholder="Sugars (g)">
+        </div>
+        <div class="form-row">
+          <input type="number" id="protein" placeholder="Protein (g)">
+          <input type="number" id="salt" placeholder="Salt (g)">
+        </div>
+        <button class="btn btn-success" onclick="saveProduct()">Save Product</button>
+      </div>
+
+      <div class="section">
+        <h2>Saved Products</h2>
+        <div id="productList" class="product-list"></div>
+      </div>
+    </div>
+
+    <!-- Meals Tab -->
+    <div id="meals-tab" class="tab-content">
+      <div class="section">
+        <h2>Create Meal</h2>
+        <input type="text" id="mealName" placeholder="Meal name">
+        <input type="date" id="mealDate">
+        <button class="btn btn-success" onclick="createMeal()">Create Meal</button>
+      </div>
+
+      <div id="mealsList"></div>
+    </div>
+
+    <!-- Config Tab -->
+    <div id="config-tab" class="tab-content">
+      <div class="section">
+        <h2>AI Configuration</h2>
+        <input type="url" id="aiEndpoint" placeholder="AI Endpoint URL">
+        <input type="password" id="aiApiKey" placeholder="API Key">
+        <input type="text" id="defaultUnit" placeholder="Default Unit (g/ml)">
+        <input type="text" id="customNutrients" placeholder="Custom Nutrients (comma-separated)">
+        <button class="btn btn-success" onclick="saveConfig()">Save Config</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
