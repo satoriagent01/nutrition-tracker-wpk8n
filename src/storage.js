@@ -1,28 +1,35 @@
-/**
- * Storage abstraction that works in both browser (localStorage) and Node.js (in-memory).
- */
+// Unified storage abstraction working in both browser (localStorage) and Node.js (in-memory Map)
+const isBrowser = typeof window !== 'undefined';
 
-const store = {};
-
-export function getItem(key) {
-  if (typeof localStorage !== 'undefined' && localStorage !== null) {
-    return localStorage.getItem(key);
+const store = {
+  _data: new Map(),
+  getItem(key) {
+    if (isBrowser) {
+      return localStorage.getItem(key);
+    }
+    return this._data.get(key) || null;
+  },
+  setItem(key, value) {
+    if (isBrowser) {
+      localStorage.setItem(key, value);
+    } else {
+      this._data.set(key, value);
+    }
+  },
+  removeItem(key) {
+    if (isBrowser) {
+      localStorage.removeItem(key);
+    } else {
+      this._data.delete(key);
+    }
+  },
+  clear() {
+    if (isBrowser) {
+      localStorage.clear();
+    } else {
+      this._data.clear();
+    }
   }
-  return store[key] || null;
-}
+};
 
-export function setItem(key, value) {
-  if (typeof localStorage !== 'undefined' && localStorage !== null) {
-    localStorage.setItem(key, value);
-  } else {
-    store[key] = value;
-  }
-}
-
-export function removeItem(key) {
-  if (typeof localStorage !== 'undefined' && localStorage !== null) {
-    localStorage.removeItem(key);
-  } else {
-    delete store[key];
-  }
-}
+export { store };
