@@ -1,7 +1,9 @@
 /**
- * Product database management using localStorage.
+ * Product database management using storage abstraction.
  * Provides save, get, and getAll operations for products.
  */
+
+import { getItem, setItem } from './storage.js';
 
 const STORAGE_KEY = 'nutrition_tracker_products';
 
@@ -11,7 +13,7 @@ const STORAGE_KEY = 'nutrition_tracker_products';
  */
 function getAllProductsFromStorage() {
   try {
-    const data = localStorage.getItem(STORAGE_KEY);
+    const data = getItem(STORAGE_KEY);
     return data ? JSON.parse(data) : [];
   } catch {
     return [];
@@ -23,7 +25,7 @@ function getAllProductsFromStorage() {
  * @param {Array} products - Array of product objects
  */
 function saveProductsToStorage(products) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
+  setItem(STORAGE_KEY, JSON.stringify(products));
 }
 
 /**
