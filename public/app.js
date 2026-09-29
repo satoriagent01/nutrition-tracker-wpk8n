@@ -1,462 +1,398 @@
 /**
- * Frontend JavaScript for Nutrition Tracker
- * Handles UI interactions, photo upload, product management, meal planning, and nutrition display.
+ * Frontend application for Nutrition Tracker
+ * Handles UI interactions and calls backend modules
  */
 
-// State management
+import { extractNutrition } from '../src/ocr.js';
+import { saveProduct, getAllProducts, deleteProduct } from '../src/products.js';
+import { createMeal, addProductToMeal, getMeal, getAllMeals, deleteMeal } from '../src/meals.js';
+import { calculateNutrition, calculateMealTotal } from '../src/nutrition.js';
+import { saveConfig, getConfig } from '../src/config.js';
+
+// State
+let currentScanData = null;
 let currentMealId = null;
 
-// Tab navigation
-function showTab(tabName) {
-  // Hide all tab contents
-  document.querySelectorAll('.tab-content').forEach(tab => {
-    tab.classList.remove('active');
-  });
-  
-  // Remove active class from all tabs
-  document.querySelectorAll('.tab').forEach(tab => {
-    tab.classList.remove('active');
-  });
-  
-  // Show selected tab
-  document.getElementById(`${tabName}-tab`).classList.add('active');
-  
-  // Add active class to clicked tab
-  event.target.classList.add('active');
-  
-  // Refresh data for the selected tab
-  if (tabName === 'products') {
-    loadProducts();
-  } else if (tabName === 'meals') {
-    loadMeals();
-  } else if (tabName === 'summary') {
-    loadSummary();
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+  loadConfig();
+  loadProducts();
+  loadMeals();
+  setDefaultDate();
+  setupDragAndDrop();
+});
+
+// Configuration
+function loadConfig() {
+  const config = getConfig();
+  if (config) {
+    document.getElementById('aiEndpoint').value = config.aiEndpoint || '';
+    document.getElementById('apiKey').value = config.apiKey || '';
   }
 }
 
-// Modal management
-function showAddProductModal() {
-  document.getElementById('addProductModal').classList.remove('hidden');
+function saveConfig() {
+  const endpoint = document.getElementById('aiEndpoint').value;
+  const apiKey = document.getElementById('apiKey').value;
+  saveConfigModule({ aiEndpoint: endpoint, apiKey });
+  alert('Configuration saved!');
 }
 
-function showCreateMealModal() {
-  document.getElementById('createMealModal').classList.remove('hidden');
-  // Set default date to today
-  document.getElementById('mealDate').value = new Date().toISOString().split('T')[0];
-}
-
-function showAddProductToMealModal(mealId) {
-  currentMealId = mealId;
-  document.getElementById('currentMealId').value = mealId;
-  document.getElementById('addProductToMealModal').classList.remove('hidden');
-  
-  // Populate product dropdown
-  const select = document.getElementById('mealProductSelect');
-  select.innerHTML = '<option value="">Select a product</option>';
-  
-  // Get products from localStorage
-  const products = JSON.parse(localStorage.getItem('nutrition_tracker_products') || '[]');
-  products.forEach(product => {
-    const option = document.createElement('option');
-    option.value = product.id;
-    option.textContent = `${product.name} (${product.brand})`;
-    select.appendChild(option);
-  });
-}
-
-function closeModal(modalId) {
-  document.getElementById(modalId).classList.add('hidden');
-}
-
-// Image upload handling
-async function handleImageUpload(event) {
+// File Upload
+function handleFileUpload(event) {
   const file = event.target.files[0];
   if (!file) return;
-  
-  // Show loading
-  document.getElementById('scanLoading').classList.remove('hidden');
-  document.getElementById('scanResult').classList.add('hidden');
-  document.getElementById('scanError').classList.add('hidden');
-  
-  try {
-    // Convert file to base64
-    const base64 = await readFileAsBase64(file);
+
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    const base64Data = e.target.result.split(',')[1];
+    const config = getConfig();
     
-    // In a real app, this would call the OCR API
-    // For now, we'll simulate with mock data
-    const nutritionData = await simulateOCR(base64);
-    
-    // Show result
-    displayScanResult(nutritionData);
-  } catch (error) {
-    showError('Failed to scan image: ' + error.message);
-  } finally {
-    document.getElementById('scanLoading').classList.add('hidden');
-  }
+    try {
+      const result = await extractNutrition(base64Data, config);
+      currentScanData = result;
+      displayScanResult(result);
+    } catch (error) {
+      alert('Failed to scan image: ' + error.message);
+    }
+  };
+  reader.readAsDataURL(file);
 }
 
-function readFileAsBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
+function setupDragAndDrop() {
+  const uploadArea = document.querySelector('.upload-area');
+  
+  uploadArea.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadArea.style.borderColor = '#2c7a2c';
+  });
+
+  uploadArea.addEventListener('dragleave', () => {
+    uploadArea.style.borderColor = '#ccc';
+  });
+
+  uploadArea.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadArea.style.borderColor = '#ccc';
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) {
+      const input = document.getElementById('fileInput');
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      input.files = dt.files;
+      handleFileUpload({ target: input });
+    }
   });
 }
 
-async function simulateOCR(base64Data) {
-  // Simulate API call delay
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  
-  // Generate mock nutrition data based on image hash
-  let hash = 0;
-  for (let i = 0; i < base64Data.length; i++) {
-    hash = ((hash << 5) - hash) + base64Data.charCodeAt(i);
-    hash = hash & hash;
-  }
-  
-  const seed = Math.abs(hash);
-  
-  return {
-    energy: {
-      kcal: 200 + (seed % 300),
-      kj: 837 + (seed % 1256)
-    },
-    fat: 5 + (seed % 20),
-    saturatedFat: 1 + (seed % 8),
-    carbs: 10 + (seed % 40),
-    sugars: 5 + (seed % 25),
-    protein: 2 + (seed % 15),
-    salt: 0.1 + (seed % 2),
-    servingSize: {
-      amount: 50 + (seed % 100),
-      unit: 'g'
-    },
-    per100g: {
-      energy: {
-        kcal: 200 + (seed % 300),
-        kj: 837 + (seed % 1256)
-      },
-      fat: 5 + (seed % 20),
-      saturatedFat: 1 + (seed % 8),
-      carbs: 10 + (seed % 40),
-      sugars: 5 + (seed % 25),
-      protein: 2 + (seed % 15),
-      salt: 0.1 + (seed % 2)
-    }
-  };
-}
-
-function displayScanResult(nutritionData) {
+function displayScanResult(data) {
   const resultDiv = document.getElementById('scanResult');
-  resultDiv.classList.remove('hidden');
-  resultDiv.innerHTML = `
-    <div class="success">
-      <h3>Scan Complete!</h3>
-      <p>Energy: ${nutritionData.energy.kcal} kcal / ${nutritionData.energy.kj} kJ</p>
-      <p>Serving Size: ${nutritionData.servingSize.amount} ${nutritionData.servingSize.unit}</p>
-      <button class="btn btn-secondary" onclick="saveScannedProduct()" style="margin-top: 10px;">Save Product</button>
+  const outputDiv = document.getElementById('scanOutput');
+  
+  outputDiv.innerHTML = `
+    <div class="nutrition-grid">
+      <div class="nutrition-item">
+        <div class="value">${data.energy}</div>
+        <div class="label">kcal</div>
+      </div>
+      <div class="nutrition-item">
+        <div class="value">${data.fat}g</div>
+        <div class="label">Fat</div>
+      </div>
+      <div class="nutrition-item">
+        <div class="value">${data.saturatedFat}g</div>
+        <div class="label">Sat. Fat</div>
+      </div>
+      <div class="nutrition-item">
+        <div class="value">${data.carbs}g</div>
+        <div class="label">Carbs</div>
+      </div>
+      <div class="nutrition-item">
+        <div class="value">${data.sugars}g</div>
+        <div class="label">Sugars</div>
+      </div>
+      <div class="nutrition-item">
+        <div class="value">${data.protein}g</div>
+        <div class="label">Protein</div>
+      </div>
+      <div class="nutrition-item">
+        <div class="value">${data.salt}g</div>
+        <div class="label">Salt</div>
+      </div>
     </div>
+    <p style="margin-top: 10px; font-size: 12px; color: #666;">
+      Serving: ${data.servingSize} ${data.servingUnit}
+    </p>
   `;
   
-  // Store the scanned data for saving
-  window.scannedProduct = nutritionData;
-}
-
-function showError(message) {
-  const errorDiv = document.getElementById('scanError');
-  errorDiv.classList.remove('hidden');
-  errorDiv.textContent = message;
-}
-
-// Product management
-async function handleAddProduct(event) {
-  event.preventDefault();
-  
-  const product = {
-    name: document.getElementById('productName').value,
-    brand: document.getElementById('productBrand').value,
-    servingSize: {
-      amount: parseInt(document.getElementById('servingAmount').value),
-      unit: document.getElementById('servingUnit').value
-    },
-    energy: {
-      kcal: parseInt(document.getElementById('energyKcal').value),
-      kj: parseInt(document.getElementById('energyKj').value)
-    },
-    fat: parseFloat(document.getElementById('fat').value),
-    saturatedFat: parseFloat(document.getElementById('saturatedFat').value),
-    carbs: parseFloat(document.getElementById('carbs').value),
-    sugars: parseFloat(document.getElementById('sugars').value),
-    protein: parseFloat(document.getElementById('protein').value),
-    salt: parseFloat(document.getElementById('salt').value),
-    per100g: {
-      energy: {
-        kcal: parseInt(document.getElementById('energyKcal').value),
-        kj: parseInt(document.getElementById('energyKj').value)
-      },
-      fat: parseFloat(document.getElementById('fat').value),
-      saturatedFat: parseFloat(document.getElementById('saturatedFat').value),
-      carbs: parseFloat(document.getElementById('carbs').value),
-      sugars: parseFloat(document.getElementById('sugars').value),
-      protein: parseFloat(document.getElementById('protein').value),
-      salt: parseFloat(document.getElementById('salt').value)
-    }
-  };
-  
-  // Save product to localStorage
-  const products = JSON.parse(localStorage.getItem('nutrition_tracker_products') || '[]');
-  product.id = Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
-  products.push(product);
-  localStorage.setItem('nutrition_tracker_products', JSON.stringify(products));
-  
-  closeModal('addProductModal');
-  event.target.reset();
-  loadProducts();
+  resultDiv.classList.remove('hidden');
 }
 
 function saveScannedProduct() {
-  if (!window.scannedProduct) return;
+  if (!currentScanData) return;
   
   const product = {
     name: 'Scanned Product',
     brand: '',
-    servingSize: window.scannedProduct.servingSize,
-    energy: window.scannedProduct.energy,
-    fat: window.scannedProduct.fat,
-    saturatedFat: window.scannedProduct.saturatedFat,
-    carbs: window.scannedProduct.carbs,
-    sugars: window.scannedProduct.sugars,
-    protein: window.scannedProduct.protein,
-    salt: window.scannedProduct.salt,
-    per100g: window.scannedProduct.per100g
+    servingSize: currentScanData.servingSize,
+    servingUnit: currentScanData.servingUnit,
+    nutritionPerServing: {
+      energy: currentScanData.energy,
+      fat: currentScanData.fat,
+      saturatedFat: currentScanData.saturatedFat,
+      carbs: currentScanData.carbs,
+      sugars: currentScanData.sugars,
+      protein: currentScanData.protein,
+      salt: currentScanData.salt
+    }
   };
   
-  // Save product to localStorage
-  const products = JSON.parse(localStorage.getItem('nutrition_tracker_products') || '[]');
-  product.id = Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
-  products.push(product);
-  localStorage.setItem('nutrition_tracker_products', JSON.stringify(products));
-  
-  window.scannedProduct = null;
-  document.getElementById('scanResult').classList.add('hidden');
+  saveProduct(product);
+  alert('Product saved!');
   loadProducts();
+  currentScanData = null;
+  document.getElementById('scanResult').classList.add('hidden');
+}
+
+// Product Management
+function showAddProductForm() {
+  document.getElementById('addProductForm').classList.remove('hidden');
+}
+
+function hideAddProductForm() {
+  document.getElementById('addProductForm').classList.add('hidden');
+}
+
+function addProduct() {
+  const product = {
+    name: document.getElementById('productName').value,
+    brand: document.getElementById('productBrand').value,
+    servingSize: parseFloat(document.getElementById('productServingSize').value) || 100,
+    servingUnit: document.getElementById('productServingUnit').value,
+    nutritionPerServing: {
+      energy: parseFloat(document.getElementById('productEnergy').value) || 0,
+      fat: parseFloat(document.getElementById('productFat').value) || 0,
+      saturatedFat: parseFloat(document.getElementById('productSaturatedFat').value) || 0,
+      carbs: parseFloat(document.getElementById('productCarbs').value) || 0,
+      sugars: parseFloat(document.getElementById('productSugars').value) || 0,
+      protein: parseFloat(document.getElementById('productProtein').value) || 0,
+      salt: parseFloat(document.getElementById('productSalt').value) || 0
+    }
+  };
+  
+  saveProduct(product);
+  hideAddProductForm();
+  loadProducts();
+  
+  // Clear form
+  document.getElementById('productName').value = '';
+  document.getElementById('productBrand').value = '';
+  document.getElementById('productEnergy').value = '0';
+  document.getElementById('productFat').value = '0';
+  document.getElementById('productSaturatedFat').value = '0';
+  document.getElementById('productCarbs').value = '0';
+  document.getElementById('productSugars').value = '0';
+  document.getElementById('productProtein').value = '0';
+  document.getElementById('productSalt').value = '0';
 }
 
 function loadProducts() {
-  const products = JSON.parse(localStorage.getItem('nutrition_tracker_products') || '[]');
-  const productList = document.getElementById('productList');
+  const products = getAllProducts();
+  const listDiv = document.getElementById('productList');
   
   if (products.length === 0) {
-    productList.innerHTML = `
-      <li class="product-item">
-        <div class="product-info">
-          <div class="product-name">No products yet</div>
-          <div class="product-brand">Scan a label or add manually</div>
-        </div>
-      </li>
-    `;
+    listDiv.innerHTML = '<p>No products yet. Scan a label or add manually.</p>';
     return;
   }
   
-  productList.innerHTML = products.map(product => `
-    <li class="product-item">
-      <div class="product-info">
-        <div class="product-name">${product.name}</div>
-        <div class="product-brand">${product.brand || 'No brand'} • ${product.servingSize.amount}${product.servingSize.unit}</div>
-        <div class="product-brand">${product.energy.kcal} kcal per serving</div>
-      </div>
-      <div class="actions">
-        <button class="btn btn-danger" onclick="deleteProduct('${product.id}')">Delete</button>
-      </div>
-    </li>
+  listDiv.innerHTML = products.map(p => `
+    <div class="product-item">
+      <strong>${p.name}</strong> ${p.brand ? '(' + p.brand + ')' : ''}
+      <br><small>Serving: ${p.servingSize} ${p.servingUnit}</small>
+      <br><small>
+        ${p.nutritionPerServing.energy} kcal | 
+        Fat: ${p.nutritionPerServing.fat}g | 
+        Carbs: ${p.nutritionPerServing.carbs}g | 
+        Protein: ${p.nutritionPerServing.protein}g
+      </small>
+      <button class="btn btn-danger" style="float: right; padding: 2px 8px; font-size: 12px;" 
+              onclick="deleteProduct('${p.id}')">Delete</button>
+    </div>
   `).join('');
 }
 
-function deleteProduct(productId) {
-  let products = JSON.parse(localStorage.getItem('nutrition_tracker_products') || '[]');
-  products = products.filter(p => p.id !== productId);
-  localStorage.setItem('nutrition_tracker_products', JSON.stringify(products));
-  loadProducts();
+// Meal Management
+function setDefaultDate() {
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('mealDate').value = today;
 }
 
-// Meal management
-async function handleCreateMeal(event) {
-  event.preventDefault();
+function createMeal() {
+  const name = document.getElementById('mealName').value;
+  const date = document.getElementById('mealDate').value;
   
-  const meal = {
-    id: Date.now().toString(36) + Math.random().toString(36).substr(2, 9),
-    name: document.getElementById('mealName').value,
-    date: document.getElementById('mealDate').value,
-    items: []
-  };
+  if (!name) {
+    alert('Please enter a meal name');
+    return;
+  }
   
-  // Save meal to localStorage
-  const meals = JSON.parse(localStorage.getItem('nutrition_tracker_meals') || '[]');
-  meals.push(meal);
-  localStorage.setItem('nutrition_tracker_meals', JSON.stringify(meals));
-  
-  closeModal('createMealModal');
-  event.target.reset();
+  const mealId = createMealModule(name, date);
+  currentMealId = mealId;
+  alert('Meal created!');
   loadMeals();
+  document.getElementById('mealName').value = '';
+}
+
+function addProductToMeal(productId) {
+  const amount = prompt('Enter amount (in serving units):');
+  if (!amount || isNaN(amount) || parseFloat(amount) <= 0) {
+    alert('Invalid amount');
+    return;
+  }
+  
+  addProductToMealModule(currentMealId, productId, parseFloat(amount), 'serving');
+  loadMeals();
+  updateNutritionSummary();
 }
 
 function loadMeals() {
-  const meals = JSON.parse(localStorage.getItem('nutrition_tracker_meals') || '[]');
-  const mealList = document.getElementById('mealList');
+  const meals = getAllMeals();
+  const listDiv = document.getElementById('mealList');
   
   if (meals.length === 0) {
-    mealList.innerHTML = '<p style="color: #666; text-align: center;">No meals created yet</p>';
+    listDiv.innerHTML = '<p>No meals yet.</p>';
     return;
   }
   
-  mealList.innerHTML = meals.map(meal => `
-    <div class="meal-item">
-      <div class="meal-info">
-        <div class="meal-name">${meal.name}</div>
-        <div class="meal-date">${meal.date}</div>
-        <div class="meal-date">${meal.items.length} items</div>
-      </div>
-      <div class="actions">
-        <button class="btn btn-secondary" onclick="showAddProductToMealModal('${meal.id}')">Add Product</button>
-        <button class="btn btn-danger" onclick="deleteMeal('${meal.id}')">Delete</button>
-      </div>
+  listDiv.innerHTML = meals.map(m => `
+    <div class="meal-item" onclick="selectMeal('${m.id}')" style="cursor: pointer;">
+      <strong>${m.name}</strong> - ${m.date}
+      <br><small>${m.items.length} item(s)</small>
+      <button class="btn btn-danger" style="float: right; padding: 2px 8px; font-size: 12px;" 
+              onclick="event.stopPropagation(); deleteMeal('${m.id}'); loadMeals(); updateNutritionSummary();">Delete</button>
     </div>
   `).join('');
 }
 
-async function handleAddProductToMeal(event) {
-  event.preventDefault();
-  
-  const mealId = document.getElementById('currentMealId').value;
-  const productId = document.getElementById('mealProductSelect').value;
-  const amount = parseFloat(document.getElementById('mealAmount').value);
-  const unit = document.getElementById('mealUnit').value;
-  
-  if (!mealId || !productId) {
-    alert('Please select a meal and product');
-    return;
+function selectMeal(mealId) {
+  currentMealId = mealId;
+  const meal = getMeal(mealId);
+  if (meal) {
+    // Show items in the meal
+    const itemsDiv = document.createElement('div');
+    itemsDiv.innerHTML = meal.items.map(item => {
+      // Find product name
+      const products = getAllProducts();
+      const product = products.find(p => p.id === item.productId);
+      return `<div style="padding: 5px 0; border-bottom: 1px solid #eee;">
+        ${product ? product.name : 'Unknown'} - ${item.amount} ${item.unit}
+        <br><small>
+          ${item.nutrition.energy} kcal | 
+          Fat: ${item.nutrition.fat}g | 
+          Carbs: ${item.nutrition.carbs}g | 
+          Protein: ${item.nutrition.protein}g
+        </small>
+      </div>`;
+    }).join('');
+    
+    // Add nutrition summary
+    const total = calculateMealTotal(meal);
+    itemsDiv.innerHTML += `
+      <div style="margin-top: 10px; padding: 10px; background: #e8f5e9; border-radius: 4px;">
+        <strong>Total:</strong> ${total.energy} kcal | 
+        Fat: ${total.fat}g | 
+        Saturated Fat: ${total.saturatedFat}g | 
+        Carbs: ${total.carbs}g | 
+        Sugars: ${total.sugars}g | 
+        Protein: ${total.protein}g | 
+        Salt: ${total.salt}g
+      </div>
+    `;
+    
+    // Add product selector
+    const products = getAllProducts();
+    if (products.length > 0) {
+      itemsDiv.innerHTML += `
+        <div style="margin-top: 10px;">
+          <select id="mealProductSelect">
+            ${products.map(p => `<option value="${p.id}">${p.name}</option>`).join('')}
+          </select>
+          <button class="btn" onclick="addProductToMeal('${mealId}')">Add Product</button>
+        </div>
+      `;
+    }
+    
+    // Remove existing items display
+    const existing = document.getElementById('mealItems');
+    if (existing) existing.remove();
+    
+    itemsDiv.id = 'mealItems';
+    document.getElementById('mealList').appendChild(itemsDiv);
+    
+    updateNutritionSummary();
   }
-  
-  // Get product details
-  const products = JSON.parse(localStorage.getItem('nutrition_tracker_products') || '[]');
-  const product = products.find(p => p.id === productId);
-  
-  if (!product) {
-    alert('Product not found');
-    return;
-  }
-  
-  // Calculate nutrition for the amount
-  const ratio = amount / (product.servingSize?.amount || 100);
-  const nutrition = {
-    energy: {
-      kcal: product.energy.kcal * ratio,
-      kj: product.energy.kj * ratio
-    },
-    fat: product.fat * ratio,
-    saturatedFat: product.saturatedFat * ratio,
-    carbs: product.carbs * ratio,
-    sugars: product.sugars * ratio,
-    protein: product.protein * ratio,
-    salt: product.salt * ratio
-  };
-  
-  // Add to meal
-  const meals = JSON.parse(localStorage.getItem('nutrition_tracker_meals') || '[]');
-  const mealIndex = meals.findIndex(m => m.id === mealId);
-  
-  if (mealIndex === -1) {
-    alert('Meal not found');
-    return;
-  }
-  
-  meals[mealIndex].items.push({
-    productId,
-    amount,
-    unit,
-    nutrition,
-    productName: product.name
-  });
-  
-  localStorage.setItem('nutrition_tracker_meals', JSON.stringify(meals));
-  
-  closeModal('addProductToMealModal');
-  loadMeals();
-  loadSummary();
 }
 
-function deleteMeal(mealId) {
-  let meals = JSON.parse(localStorage.getItem('nutrition_tracker_meals') || '[]');
-  meals = meals.filter(m => m.id !== mealId);
-  localStorage.setItem('nutrition_tracker_meals', JSON.stringify(meals));
-  loadMeals();
-  loadSummary();
-}
-
-// Nutrition summary
-function loadSummary() {
-  const meals = JSON.parse(localStorage.getItem('nutrition_tracker_meals') || '[]');
-  
-  let totalKcal = 0;
-  let totalFat = 0;
-  let totalSaturatedFat = 0;
-  let totalCarbs = 0;
-  let totalSugars = 0;
-  let totalProtein = 0;
-  let totalSalt = 0;
-  
-  meals.forEach(meal => {
-    meal.items.forEach(item => {
-      if (item.nutrition) {
-        totalKcal += item.nutrition.energy.kcal || 0;
-        totalFat += item.nutrition.fat || 0;
-        totalSaturatedFat += item.nutrition.saturatedFat || 0;
-        totalCarbs += item.nutrition.carbs || 0;
-        totalSugars += item.nutrition.sugars || 0;
-        totalProtein += item.nutrition.protein || 0;
-        totalSalt += item.nutrition.salt || 0;
-      }
-    });
-  });
-  
-  // Update summary display
+function updateNutritionSummary() {
   const summaryDiv = document.getElementById('nutritionSummary');
+  
+  if (!currentMealId) {
+    summaryDiv.innerHTML = '<p>Select a meal to see nutrition summary.</p>';
+    return;
+  }
+  
+  const meal = getMeal(currentMealId);
+  if (!meal) {
+    summaryDiv.innerHTML = '<p>Meal not found.</p>';
+    return;
+  }
+  
+  const total = calculateMealTotal(meal);
+  
   summaryDiv.innerHTML = `
-    <div class="nutrition-card">
-      <div class="value">${Math.round(totalKcal)}</div>
-      <div class="label">kcal</div>
-    </div>
-    <div class="nutrition-card">
-      <div class="value">${totalFat.toFixed(1)}g</div>
-      <div class="label">Fat</div>
-    </div>
-    <div class="nutrition-card">
-      <div class="value">${totalSaturatedFat.toFixed(1)}g</div>
-      <div class="label">Saturated Fat</div>
-    </div>
-    <div class="nutrition-card">
-      <div class="value">${totalCarbs.toFixed(1)}g</div>
-      <div class="label">Carbs</div>
-    </div>
-    <div class="nutrition-card">
-      <div class="value">${totalSugars.toFixed(1)}g</div>
-      <div class="label">Sugars</div>
-    </div>
-    <div class="nutrition-card">
-      <div class="value">${totalProtein.toFixed(1)}g</div>
-      <div class="label">Protein</div>
-    </div>
-    <div class="nutrition-card">
-      <div class="value">${totalSalt.toFixed(2)}g</div>
-      <div class="label">Salt</div>
+    <h3>${meal.name} - ${meal.date}</h3>
+    <div class="nutrition-grid">
+      <div class="nutrition-item">
+        <div class="value">${total.energy}</div>
+        <div class="label">kcal</div>
+      </div>
+      <div class="nutrition-item">
+        <div class="value">${total.fat}g</div>
+        <div class="label">Fat</div>
+      </div>
+      <div class="nutrition-item">
+        <div class="value">${total.saturatedFat}g</div>
+        <div class="label">Sat. Fat</div>
+      </div>
+      <div class="nutrition-item">
+        <div class="value">${total.carbs}g</div>
+        <div class="label">Carbs</div>
+      </div>
+      <div class="nutrition-item">
+        <div class="value">${total.sugars}g</div>
+        <div class="label">Sugars</div>
+      </div>
+      <div class="nutrition-item">
+        <div class="value">${total.protein}g</div>
+        <div class="label">Protein</div>
+      </div>
+      <div class="nutrition-item">
+        <div class="value">${total.salt}g</div>
+        <div class="label">Salt</div>
+      </div>
     </div>
   `;
 }
 
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', () => {
-  loadProducts();
-  loadMeals();
-  loadSummary();
-});
+// Expose functions to global scope for HTML onclick handlers
+window.saveConfig = saveConfig;
+window.handleFileUpload = handleFileUpload;
+window.saveScannedProduct = saveScannedProduct;
+window.showAddProductForm = showAddProductForm;
+window.hideAddProductForm = hideAddProductForm;
+window.addProduct = addProduct;
+window.createMeal = createMeal;
+window.addProductToMeal = addProductToMeal;
+window.deleteProduct = deleteProduct;
+window.deleteMeal = deleteMeal;
+window.selectMeal = selectMeal;
