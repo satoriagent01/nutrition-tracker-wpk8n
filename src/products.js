@@ -1,4 +1,4 @@
-import { store } from './storage.js';
+import { storage } from './storage.js';
 
 const PRODUCTS_KEY = 'nutrition-tracker-products';
 
@@ -7,7 +7,7 @@ const PRODUCTS_KEY = 'nutrition-tracker-products';
  * @returns {Array} Array of product objects
  */
 function getAllProductsFromStorage() {
-  const raw = store.getItem(PRODUCTS_KEY);
+  const raw = storage.getItem(PRODUCTS_KEY);
   if (!raw) return [];
   try {
     return JSON.parse(raw);
@@ -21,7 +21,7 @@ function getAllProductsFromStorage() {
  * @param {Array} products - Array of product objects
  */
 function saveAllProductsToStorage(products) {
-  store.setItem(PRODUCTS_KEY, JSON.stringify(products));
+  storage.setItem(PRODUCTS_KEY, JSON.stringify(products));
 }
 
 /**
@@ -37,22 +37,34 @@ function generateId() {
  * @param {Object} product - Product object
  * @param {string} product.name - Product name
  * @param {string} product.brand - Brand name
- * @param {string} product.servingSize - Serving size value
- * @param {string} product.servingUnit - Serving unit (e.g., 'g', 'ml', 'piece')
- * @param {Object} product.nutritionPerServing - Nutrition per serving
+ * @param {Object} product.servingSize - Serving size { amount, unit }
+ * @param {Object} product.energy - Energy { kcal, kj }
+ * @param {number} product.fat - Fat in grams
+ * @param {number} product.saturatedFat - Saturated fat in grams
+ * @param {number} product.carbs - Carbohydrates in grams
+ * @param {number} product.sugars - Sugars in grams
+ * @param {number} product.protein - Protein in grams
+ * @param {number} product.salt - Salt in grams
+ * @param {Object} product.per100g - Per 100g nutrition data
  * @param {string} [product.imageUrl] - Optional image URL
- * @returns {string} Product ID
+ * @returns {Promise<string>} Product ID
  */
-export function saveProduct(product) {
+export async function saveProduct(product) {
   const products = getAllProductsFromStorage();
   const id = product.id || generateId();
   const newProduct = {
     id,
     name: product.name,
     brand: product.brand || '',
-    servingSize: product.servingSize || '100',
-    servingUnit: product.servingUnit || 'g',
-    nutritionPerServing: product.nutritionPerServing || {},
+    servingSize: product.servingSize || { amount: 100, unit: 'g' },
+    energy: product.energy || { kcal: 0, kj: 0 },
+    fat: product.fat || 0,
+    saturatedFat: product.saturatedFat || 0,
+    carbs: product.carbs || 0,
+    sugars: product.sugars || 0,
+    protein: product.protein || 0,
+    salt: product.salt || 0,
+    per100g: product.per100g || {},
     imageUrl: product.imageUrl || ''
   };
 
@@ -71,32 +83,31 @@ export function saveProduct(product) {
 /**
  * Get a product by ID
  * @param {string} id - Product ID
- * @returns {Object|null} Product object or null
+ * @returns {Promise<Object|null>} Product object or null
  */
-export function getProduct(id) {
+export async function getProduct(id) {
   const products = getAllProductsFromStorage();
   return products.find(p => p.id === id) || null;
 }
 
 /**
  * Get all products
- * @returns {Array} Array of all product objects
+ * @returns {Promise<Array>} Array of all products
  */
-export function getAllProducts() {
+export async function getAllProducts() {
   return getAllProductsFromStorage();
 }
 
 /**
  * Delete a product by ID
  * @param {string} id - Product ID
- * @returns {boolean} Whether the product was deleted
+ * @returns {Promise<boolean>} Whether the product was deleted
  */
-export function deleteProduct(id) {
+export async function deleteProduct(id) {
   const products = getAllProductsFromStorage();
-  const filtered = products.filter(p => p.id !== id);
-  if (filtered.length === products.length) {
-    return false;
-  }
-  saveAllProductsToStorage(filtered);
+  const index = products.findIndex(p => p.id === id);
+  if (index === -1) return false;
+  products.splice(index, 1);
+  saveAllProductsToStorage(products);
   return true;
 }
