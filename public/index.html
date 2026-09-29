@@ -10,37 +10,28 @@
       margin: 0;
       padding: 0;
     }
-
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-      background-color: #f5f5f5;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f5f5;
       color: #333;
       line-height: 1.6;
     }
-
     .container {
       max-width: 800px;
       margin: 0 auto;
       padding: 20px;
     }
-
-    header {
-      background: linear-gradient(135deg, #4CAF50, #45a049);
-      color: white;
-      padding: 20px 0;
+    h1 {
       text-align: center;
-      margin-bottom: 20px;
+      color: #2c7a2c;
+      margin-bottom: 30px;
     }
-
-    header h1 {
-      font-size: 2em;
-      margin-bottom: 5px;
+    h2 {
+      color: #2c7a2c;
+      margin-bottom: 15px;
+      border-bottom: 2px solid #2c7a2c;
+      padding-bottom: 5px;
     }
-
-    header p {
-      opacity: 0.9;
-    }
-
     .section {
       background: white;
       border-radius: 8px;
@@ -48,486 +39,223 @@
       margin-bottom: 20px;
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
-
-    .section h2 {
-      color: #4CAF50;
-      margin-bottom: 15px;
-      font-size: 1.3em;
-    }
-
-    .upload-area {
-      border: 2px dashed #ccc;
-      border-radius: 8px;
-      padding: 30px;
-      text-align: center;
-      cursor: pointer;
-      transition: border-color 0.3s;
-    }
-
-    .upload-area:hover {
-      border-color: #4CAF50;
-    }
-
-    .upload-area input[type="file"] {
-      display: none;
-    }
-
-    .upload-area p {
-      color: #666;
-      margin-top: 10px;
-    }
-
     .btn {
-      background: #4CAF50;
+      background: #2c7a2c;
       color: white;
       border: none;
       padding: 10px 20px;
       border-radius: 4px;
       cursor: pointer;
-      font-size: 1em;
-      transition: background 0.3s;
+      font-size: 14px;
+      margin: 5px;
     }
-
     .btn:hover {
-      background: #45a049;
+      background: #236123;
     }
-
-    .btn-secondary {
-      background: #2196F3;
-    }
-
-    .btn-secondary:hover {
-      background: #1976D2;
-    }
-
     .btn-danger {
-      background: #f44336;
+      background: #c0392b;
     }
-
     .btn-danger:hover {
-      background: #d32f2f;
+      background: #962d22;
     }
-
-    .form-group {
-      margin-bottom: 15px;
-    }
-
-    .form-group label {
-      display: block;
-      margin-bottom: 5px;
-      font-weight: 500;
-    }
-
-    .form-group input,
-    .form-group select {
-      width: 100%;
+    input, select, textarea {
       padding: 8px 12px;
       border: 1px solid #ddd;
       border-radius: 4px;
-      font-size: 1em;
+      font-size: 14px;
+      width: 100%;
+      margin-bottom: 10px;
     }
-
-    .form-row {
-      display: flex;
-      gap: 10px;
+    .form-group {
+      margin-bottom: 15px;
     }
-
-    .form-row .form-group {
-      flex: 1;
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
     }
-
-    .product-list, .meal-list {
-      list-style: none;
-    }
-
     .product-item, .meal-item {
       background: #f9f9f9;
-      padding: 12px;
+      padding: 10px;
+      margin-bottom: 10px;
       border-radius: 4px;
-      margin-bottom: 8px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      border-left: 3px solid #2c7a2c;
     }
-
-    .product-info, .meal-info {
-      flex: 1;
-    }
-
-    .product-name, .meal-name {
-      font-weight: 600;
-    }
-
-    .product-brand, .meal-date {
-      color: #666;
-      font-size: 0.9em;
-    }
-
-    .nutrition-summary {
+    .nutrition-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
       gap: 10px;
-      margin-top: 15px;
+      margin-top: 10px;
     }
-
-    .nutrition-card {
-      background: #f0f8f0;
-      padding: 12px;
+    .nutrition-item {
+      background: #e8f5e9;
+      padding: 10px;
       border-radius: 4px;
       text-align: center;
     }
-
-    .nutrition-card .value {
-      font-size: 1.5em;
-      font-weight: 600;
-      color: #4CAF50;
+    .nutrition-item .value {
+      font-size: 20px;
+      font-weight: bold;
+      color: #2c7a2c;
     }
-
-    .nutrition-card .label {
-      font-size: 0.85em;
+    .nutrition-item .label {
+      font-size: 12px;
       color: #666;
     }
-
-    .meal-item-detail {
-      background: #f0f8f0;
-      padding: 10px;
-      border-radius: 4px;
-      margin-top: 10px;
+    #fileInput {
+      display: none;
     }
-
-    .meal-item-detail h4 {
-      margin-bottom: 8px;
-      color: #4CAF50;
+    .upload-area {
+      border: 2px dashed #ccc;
+      padding: 30px;
+      text-align: center;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-bottom: 15px;
     }
-
+    .upload-area:hover {
+      border-color: #2c7a2c;
+    }
     .hidden {
       display: none;
     }
-
-    .loading {
-      text-align: center;
-      padding: 20px;
-      color: #666;
-    }
-
-    .error {
-      background: #ffebee;
-      color: #c62828;
-      padding: 10px;
-      border-radius: 4px;
-      margin-bottom: 10px;
-    }
-
-    .success {
-      background: #e8f5e9;
-      color: #2e7d32;
-      padding: 10px;
-      border-radius: 4px;
-      margin-bottom: 10px;
-    }
-
-    .actions {
-      display: flex;
-      gap: 5px;
-    }
-
-    .actions button {
-      padding: 5px 10px;
-      font-size: 0.85em;
-    }
-
-    .modal {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0,0,0,0.5);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-    }
-
-    .modal-content {
-      background: white;
-      padding: 20px;
-      border-radius: 8px;
-      max-width: 500px;
-      width: 90%;
-      max-height: 80vh;
-      overflow-y: auto;
-    }
-
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 15px;
-    }
-
-    .close-btn {
-      background: none;
-      border: none;
-      font-size: 1.5em;
-      cursor: pointer;
-      color: #666;
-    }
-
-    .tab-container {
+    .flex-row {
       display: flex;
       gap: 10px;
-      margin-bottom: 20px;
+      align-items: center;
     }
-
-    .tab {
-      padding: 10px 20px;
-      background: #e0e0e0;
-      border: none;
-      border-radius: 4px 4px 0 0;
-      cursor: pointer;
-      font-size: 1em;
-    }
-
-    .tab.active {
-      background: #4CAF50;
-      color: white;
-    }
-
-    .tab-content {
-      display: none;
-    }
-
-    .tab-content.active {
-      display: block;
+    .flex-row > * {
+      flex: 1;
     }
   </style>
 </head>
 <body>
-  <header>
-    <h1>🥗 Nutrition Tracker</h1>
-    <p>Track your nutrition by scanning product labels</p>
-  </header>
-
   <div class="container">
-    <!-- Navigation Tabs -->
-    <div class="tab-container">
-      <button class="tab active" onclick="showTab('scan')">📷 Scan</button>
-      <button class="tab" onclick="showTab('products')">📦 Products</button>
-      <button class="tab" onclick="showTab('meals')">🍽️ Meals</button>
-      <button class="tab" onclick="showTab('summary')">📊 Summary</button>
+    <h1>🥗 Nutrition Tracker</h1>
+
+    <!-- Configuration Section -->
+    <div class="section">
+      <h2>⚙️ Configuration</h2>
+      <div class="form-group">
+        <label>AI Endpoint URL:</label>
+        <input type="text" id="aiEndpoint" placeholder="https://api.openai.com/v1/chat/completions">
+      </div>
+      <div class="form-group">
+        <label>API Key:</label>
+        <input type="password" id="apiKey" placeholder="sk-...">
+      </div>
+      <button class="btn" onclick="saveConfig()">Save Configuration</button>
     </div>
 
-    <!-- Scan Tab -->
-    <div id="scan-tab" class="tab-content active">
-      <div class="section">
-        <h2>Scan Nutrition Label</h2>
-        <div class="upload-area" onclick="document.getElementById('imageInput').click()">
-          <input type="file" id="imageInput" accept="image/jpeg, image/png" onchange="handleImageUpload(event)">
-          <p>📷 Click to upload a nutrition label photo</p>
-          <p style="font-size: 0.9em; color: #999;">Supports JPEG and PNG formats</p>
-        </div>
-        <div id="scanResult" class="hidden"></div>
-        <div id="scanLoading" class="loading hidden">
-          <p>🔄 Scanning nutrition label...</p>
-        </div>
-        <div id="scanError" class="error hidden"></div>
+    <!-- Photo Upload Section -->
+    <div class="section">
+      <h2>📸 Scan Nutrition Label</h2>
+      <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+        <p>Click to upload a photo of a nutrition label</p>
+        <p style="font-size: 12px; color: #999;">or drag and drop an image</p>
+      </div>
+      <input type="file" id="fileInput" accept="image/*" onchange="handleFileUpload(event)">
+      <div id="scanResult" class="hidden">
+        <h3>Scan Result</h3>
+        <div id="scanOutput"></div>
+        <button class="btn" onclick="saveScannedProduct()">Save as Product</button>
       </div>
     </div>
 
-    <!-- Products Tab -->
-    <div id="products-tab" class="tab-content">
-      <div class="section">
-        <h2>My Products</h2>
-        <button class="btn" onclick="showAddProductModal()">+ Add Product</button>
-        <ul id="productList" class="product-list" style="margin-top: 15px;">
-          <li class="product-item">
-            <div class="product-info">
-              <div class="product-name">No products yet</div>
-              <div class="product-brand">Scan a label or add manually</div>
-            </div>
-          </li>
-        </ul>
+    <!-- Product List Section -->
+    <div class="section">
+      <h2>📦 Products</h2>
+      <div id="productList">
+        <p>No products yet. Scan a label or add manually.</p>
       </div>
-    </div>
-
-    <!-- Meals Tab -->
-    <div id="meals-tab" class="tab-content">
-      <div class="section">
-        <h2>Meal Planner</h2>
-        <button class="btn" onclick="showCreateMealModal()">+ Create Meal</button>
-        <div id="mealList" style="margin-top: 15px;"></div>
-      </div>
-    </div>
-
-    <!-- Summary Tab -->
-    <div id="summary-tab" class="tab-content">
-      <div class="section">
-        <h2>Nutrition Summary</h2>
-        <div id="nutritionSummary" class="nutrition-summary">
-          <div class="nutrition-card">
-            <div class="value">0</div>
-            <div class="label">kcal</div>
-          </div>
-          <div class="nutrition-card">
-            <div class="value">0g</div>
-            <div class="label">Fat</div>
-          </div>
-          <div class="nutrition-card">
-            <div class="value">0g</div>
-            <div class="label">Saturated Fat</div>
-          </div>
-          <div class="nutrition-card">
-            <div class="value">0g</div>
-            <div class="label">Carbs</div>
-          </div>
-          <div class="nutrition-card">
-            <div class="value">0g</div>
-            <div class="label">Sugars</div>
-          </div>
-          <div class="nutrition-card">
-            <div class="value">0g</div>
-            <div class="label">Protein</div>
-          </div>
-          <div class="nutrition-card">
-            <div class="value">0g</div>
-            <div class="label">Salt</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Add Product Modal -->
-  <div id="addProductModal" class="modal hidden">
-    <div class="modal-content">
-      <div class="modal-header">
+      <button class="btn" onclick="showAddProductForm()">+ Add Product Manually</button>
+      <div id="addProductForm" class="hidden">
         <h3>Add Product</h3>
-        <button class="close-btn" onclick="closeModal('addProductModal')">&times;</button>
-      </div>
-      <form onsubmit="handleAddProduct(event)">
         <div class="form-group">
-          <label for="productName">Product Name</label>
-          <input type="text" id="productName" required>
+          <label>Name:</label>
+          <input type="text" id="productName">
         </div>
         <div class="form-group">
-          <label for="productBrand">Brand</label>
+          <label>Brand:</label>
           <input type="text" id="productBrand">
         </div>
-        <div class="form-row">
+        <div class="flex-row">
           <div class="form-group">
-            <label for="servingAmount">Serving Size</label>
-            <input type="number" id="servingAmount" value="100" required>
+            <label>Serving Size:</label>
+            <input type="number" id="productServingSize" value="100">
           </div>
           <div class="form-group">
-            <label for="servingUnit">Unit</label>
-            <select id="servingUnit">
-              <option value="g">grams</option>
+            <label>Unit:</label>
+            <select id="productServingUnit">
+              <option value="g">g</option>
               <option value="ml">ml</option>
-              <option value="pcs">pieces</option>
+              <option value="piece">piece</option>
             </select>
           </div>
         </div>
-        <div class="form-row">
+        <div class="flex-row">
           <div class="form-group">
-            <label for="energyKcal">Energy (kcal)</label>
-            <input type="number" id="energyKcal" value="200" required>
+            <label>Energy (kcal):</label>
+            <input type="number" id="productEnergy" value="0">
           </div>
           <div class="form-group">
-            <label for="energyKj">Energy (kJ)</label>
-            <input type="number" id="energyKj" value="837" required>
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label for="fat">Fat (g)</label>
-            <input type="number" id="fat" step="0.1" value="10" required>
-          </div>
-          <div class="form-group">
-            <label for="saturatedFat">Saturated Fat (g)</label>
-            <input type="number" id="saturatedFat" step="0.1" value="3" required>
+            <label>Fat (g):</label>
+            <input type="number" id="productFat" value="0">
           </div>
         </div>
-        <div class="form-row">
+        <div class="flex-row">
           <div class="form-group">
-            <label for="carbs">Carbs (g)</label>
-            <input type="number" id="carbs" step="0.1" value="20" required>
+            <label>Saturated Fat (g):</label>
+            <input type="number" id="productSaturatedFat" value="0">
           </div>
           <div class="form-group">
-            <label for="sugars">Sugars (g)</label>
-            <input type="number" id="sugars" step="0.1" value="15" required>
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label for="protein">Protein (g)</label>
-            <input type="number" id="protein" step="0.1" value="5" required>
-          </div>
-          <div class="form-group">
-            <label for="salt">Salt (g)</label>
-            <input type="number" id="salt" step="0.1" value="0.5" required>
+            <label>Carbs (g):</label>
+            <input type="number" id="productCarbs" value="0">
           </div>
         </div>
-        <button type="submit" class="btn" style="width: 100%;">Save Product</button>
-      </form>
-    </div>
-  </div>
-
-  <!-- Create Meal Modal -->
-  <div id="createMealModal" class="modal hidden">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3>Create Meal</h3>
-        <button class="close-btn" onclick="closeModal('createMealModal')">&times;</button>
+        <div class="flex-row">
+          <div class="form-group">
+            <label>Sugars (g):</label>
+            <input type="number" id="productSugars" value="0">
+          </div>
+          <div class="form-group">
+            <label>Protein (g):</label>
+            <input type="number" id="productProtein" value="0">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Salt (g):</label>
+          <input type="number" id="productSalt" value="0">
+        </div>
+        <button class="btn" onclick="addProduct()">Save Product</button>
+        <button class="btn btn-danger" onclick="hideAddProductForm()">Cancel</button>
       </div>
-      <form onsubmit="handleCreateMeal(event)">
-        <div class="form-group">
-          <label for="mealName">Meal Name</label>
-          <input type="text" id="mealName" placeholder="e.g., Lunch" required>
-        </div>
-        <div class="form-group">
-          <label for="mealDate">Date</label>
-          <input type="date" id="mealDate" required>
-        </div>
-        <button type="submit" class="btn" style="width: 100%;">Create Meal</button>
-      </form>
     </div>
-  </div>
 
-  <!-- Add Product to Meal Modal -->
-  <div id="addProductToMealModal" class="modal hidden">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3>Add Product to Meal</h3>
-        <button class="close-btn" onclick="closeModal('addProductToMealModal')">&times;</button>
+    <!-- Meal Planner Section -->
+    <div class="section">
+      <h2>🍽️ Meal Planner</h2>
+      <div class="form-group">
+        <label>Meal Name:</label>
+        <input type="text" id="mealName" placeholder="Breakfast, Lunch, Dinner...">
       </div>
-      <form onsubmit="handleAddProductToMeal(event)">
-        <input type="hidden" id="currentMealId">
-        <div class="form-group">
-          <label for="mealProductSelect">Product</label>
-          <select id="mealProductSelect" required>
-            <option value="">Select a product</option>
-          </select>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label for="mealAmount">Amount</label>
-            <input type="number" id="mealAmount" value="100" required>
-          </div>
-          <div class="form-group">
-            <label for="mealUnit">Unit</label>
-            <select id="mealUnit">
-              <option value="g">grams</option>
-              <option value="ml">ml</option>
-              <option value="pcs">pieces</option>
-            </select>
-          </div>
-        </div>
-        <button type="submit" class="btn" style="width: 100%;">Add to Meal</button>
-      </form>
+      <div class="form-group">
+        <label>Date:</label>
+        <input type="date" id="mealDate">
+      </div>
+      <button class="btn" onclick="createMeal()">Create Meal</button>
+      <div id="mealList"></div>
+    </div>
+
+    <!-- Nutrition Summary -->
+    <div class="section">
+      <h2>📊 Nutrition Summary</h2>
+      <div id="nutritionSummary">
+        <p>Select a meal to see nutrition summary.</p>
+      </div>
     </div>
   </div>
 
-  <script src="app.js"></script>
+  <script type="module" src="app.js"></script>
 </body>
 </html>
