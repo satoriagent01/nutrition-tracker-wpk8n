@@ -1,4 +1,4 @@
-import { store } from './storage.js';
+import { storage } from './storage.js';
 
 const CONFIG_KEY = 'nutrition-tracker-config';
 
@@ -6,23 +6,26 @@ const CONFIG_KEY = 'nutrition-tracker-config';
  * Save user configuration
  * @param {Object} config - User configuration
  * @param {string} config.aiEndpoint - AI endpoint URL
- * @param {string} config.aiKey - AI API key
+ * @param {string} config.aiApiKey - AI API key
+ * @param {string} config.defaultUnit - Default unit (g, ml, etc.)
  * @param {string[]} config.customNutrients - Custom nutrient names
+ * @returns {Promise<void>}
  */
-export function saveConfig(config) {
-  store.setItem(CONFIG_KEY, JSON.stringify(config));
+export async function saveConfig(config) {
+  storage.setItem(CONFIG_KEY, JSON.stringify(config));
 }
 
 /**
  * Get user configuration
- * @returns {Object} User configuration with defaults
+ * @returns {Promise<Object>} User configuration with defaults
  */
-export function getConfig() {
-  const raw = store.getItem(CONFIG_KEY);
+export async function getConfig() {
+  const raw = storage.getItem(CONFIG_KEY);
   if (!raw) {
     return {
       aiEndpoint: '',
-      aiKey: '',
+      aiApiKey: '',
+      defaultUnit: 'g',
       customNutrients: []
     };
   }
@@ -31,7 +34,8 @@ export function getConfig() {
   } catch {
     return {
       aiEndpoint: '',
-      aiKey: '',
+      aiApiKey: '',
+      defaultUnit: 'g',
       customNutrients: []
     };
   }
