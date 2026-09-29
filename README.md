@@ -1,90 +1,152 @@
 # Nutrition Tracker
 
-A free, ad-free nutrition tracker that lets you photograph product nutrition labels and track your dietary intake with custom meal planning.
+A free, ad-free nutrition tracker that allows users to photograph product nutrition labels, extract nutritional information using AI-powered OCR, store products in a personal database, and create custom meal plans by specifying gram amounts of each product.
 
 ## Features
 
-- **Photo Scanning**: Take photos of nutrition labels to automatically extract nutritional information using AI OCR
-- **Product Database**: Store and manage your favorite products with their nutritional data
-- **Meal Planning**: Create custom meals by adding products with specific amounts
-- **Nutrition Calculation**: Automatically calculate total nutrition based on the amounts you add to meals
-- **Custom Tracking**: Track any nutrients you care about - calories, sodium, saturated fats, or anything else
-- **Privacy-First**: All data stored locally in your browser. No accounts, no tracking, no ads.
+- **Photo Scanning & OCR**: Upload photos of nutrition labels and extract nutritional information using AI
+- **Product Database**: Store extracted products with their nutritional information
+- **Meal Planning**: Create meals and add products with custom gram amounts
+- **Nutrition Calculation**: Automatically calculate total nutrition based on amounts
+- **Custom Tracking**: Track any nutrient with custom nutrient definitions
 
-## How to Use
+## Setup
 
-### Running the App
+### Prerequisites
 
-Simply open `public/index.html` in a web browser. No server required for basic functionality.
+- Node.js 24+
+- A modern web browser
 
-For a better experience, serve the files with any static file server:
+### Installation
 
 ```bash
-npx serve public
+npm install
 ```
 
-Then open `http://localhost:3000` in your browser.
+## Running the App
 
-### Configuring the AI Endpoint
+### Development Server
 
-To use the photo scanning feature, you need to configure an AI endpoint:
+```bash
+npm start
+```
 
-1. Go to the "Config" tab in the app
-2. Enter your AI endpoint URL (OpenAI-compatible API)
-3. Enter your API key
-4. Click "Save Config"
+This starts a local development server. Open your browser and navigate to the displayed URL.
 
-The app uses an OpenAI-compatible endpoint. You can use:
-- OpenAI's GPT-4o API
-- Any compatible service like Ollama, LM Studio, or other OpenAI-compatible endpoints
+### Direct File Access
 
-### Taking Photos
+You can also open `public/index.html` directly in your browser.
 
-1. Go to the "Products" tab
-2. Click "Take Photo" to capture or upload a nutrition label
-3. The AI will attempt to extract nutritional information
-4. Review and edit the extracted data if needed
-5. Click "Save Product" to add it to your database
+## Configuration
 
-### Creating Meals
+### AI Endpoint
 
-1. Go to the "Meals" tab
-2. Enter a meal name and date
-3. Click "Create Meal"
-4. Add products from your database with specific amounts
-5. View the total nutrition for your meal
+The app uses an OpenAI-compatible endpoint for OCR extraction. Configure it in the app settings:
 
-## Data Model
+- **AI Endpoint**: URL of your OCR API endpoint (e.g., `https://api.openai.com/v1/chat/completions`)
+- **AI API Key**: Your API key for the OCR service
+- **Default Unit**: Default unit for amounts (grams, ml, pieces)
+- **Custom Nutrients**: Additional nutrients to track (e.g., sodium, fiber, cholesterol)
 
-- **Product**: name, brand, serving size, nutritional values (energy, fat, saturated fat, carbs, sugars, protein, salt)
-- **Meal**: name, date, list of items (product reference, amount, unit)
-- **Nutrition Data**: energy (kcal/kJ), fat, saturated fat, carbs, sugars, protein, salt
+### Storage
+
+The app uses localStorage in the browser for persistence. In Node.js tests, an in-memory store is used.
 
 ## Testing
 
-Run the test suite with:
+### Run Tests
 
 ```bash
 npm test
 ```
 
-The tests cover:
-- OCR extraction of nutrition data
-- Product database operations (save, get, getAll)
-- Meal planning (create, add products, get, getAll)
-- Nutrition calculation (per-product and meal totals)
-- User configuration (save and get config)
+The test suite covers:
 
-## What's Not Done Yet
+- **OCR**: Nutrition label extraction
+- **Products**: Product database operations (save, get, getAll)
+- **Meals**: Meal planning operations (create, add product, get, getAll)
+- **Nutrition**: Nutrition calculation (per-amount and meal totals)
+- **Config**: User configuration management
 
-- **Offline AI**: The OCR feature requires an internet connection and a configured AI endpoint. No local OCR is implemented yet.
-- **Barcode Scanning**: No barcode scanning support for quick product lookup.
-- **Cloud Sync**: All data is stored locally. No cloud sync or backup functionality.
-- **Nutritional Goals**: No ability to set daily nutritional targets or track progress.
-- **Recipe Support**: No recipe creation or management features.
-- **Multi-language**: The OCR works best with English labels. Other languages may not be fully supported.
-- **Mobile App**: This is a web app. No native mobile app support.
+### Test Structure
+
+Tests are located in the `tests/` directory and use Node.js built-in test runner with ES modules.
+
+## Architecture
+
+### Source Files
+
+- `src/ocr.js` - AI-powered OCR extraction for nutrition labels
+- `src/products.js` - Product database management
+- `src/meals.js` - Meal planning management
+- `src/nutrition.js` - Nutrition calculation utilities
+- `src/config.js` - User configuration management
+- `src/storage.js` - Storage abstraction layer (localStorage for browser, in-memory for Node.js)
+
+### Public Files
+
+- `public/index.html` - Main UI page
+- `public/app.js` - Frontend JavaScript
+
+## API Reference
+
+### OCR Module
+
+```javascript
+import { extractNutrition } from './src/ocr.js';
+
+const nutritionData = await extractNutrition(imageData);
+```
+
+### Products Module
+
+```javascript
+import { saveProduct, getProduct, getAllProducts } from './src/products.js';
+
+const id = await saveProduct(product);
+const product = await getProduct(id);
+const allProducts = await getAllProducts();
+```
+
+### Meals Module
+
+```javascript
+import { createMeal, addProductToMeal, getMeal, getAllMeals } from './src/meals.js';
+
+const mealId = await createMeal(name, date);
+await addProductToMeal(mealId, productId, amount, unit);
+const meal = await getMeal(mealId);
+const allMeals = await getAllMeals();
+```
+
+### Nutrition Module
+
+```javascript
+import { calculateNutrition, calculateMealTotal } from './src/nutrition.js';
+
+const nutrition = await calculateNutrition(product, amount, unit);
+const total = await calculateMealTotal(meal);
+```
+
+### Config Module
+
+```javascript
+import { saveConfig, getConfig } from './src/config.js';
+
+await saveConfig(config);
+const config = await getConfig();
+```
+
+## Not Yet Implemented
+
+- Real AI OCR integration (currently uses mock data)
+- User authentication
+- Cloud sync
+- Export/import data
+- Advanced filtering and search
+- Nutritional goal tracking
+- Barcode scanning
 
 ## License
 
-This project is free and open source. No ads, no tracking, no paywalls.
+This project is free and ad-free. No license restrictions apply.
