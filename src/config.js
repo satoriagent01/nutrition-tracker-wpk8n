@@ -1,37 +1,11 @@
 /**
- * User configuration management.
+ * User configuration management using storage abstraction.
  * Stores AI endpoint configuration and custom nutrients.
- * Uses localStorage in browser, in-memory store in Node.js.
  */
+
+import { getItem, setItem, removeItem } from './storage.js';
 
 const STORAGE_KEY = 'nutrition_tracker_config';
-
-/**
- * Storage abstraction that works in both browser and Node.js.
- */
-const storage = {
-  get(key) {
-    if (typeof localStorage !== 'undefined') {
-      return localStorage.getItem(key);
-    }
-    return storage._memory[key] || null;
-  },
-  set(key, value) {
-    if (typeof localStorage !== 'undefined') {
-      localStorage.setItem(key, value);
-    } else {
-      storage._memory[key] = value;
-    }
-  },
-  remove(key) {
-    if (typeof localStorage !== 'undefined') {
-      localStorage.removeItem(key);
-    } else {
-      delete storage._memory[key];
-    }
-  },
-  _memory: {}
-};
 
 /**
  * Default configuration.
@@ -49,7 +23,7 @@ const DEFAULT_CONFIG = {
  */
 export function getConfig() {
   try {
-    const data = storage.get(STORAGE_KEY);
+    const data = getItem(STORAGE_KEY);
     if (data) {
       return { ...DEFAULT_CONFIG, ...JSON.parse(data) };
     }
@@ -67,7 +41,7 @@ export function saveConfig(config) {
   try {
     const currentConfig = getConfig();
     const mergedConfig = { ...currentConfig, ...config };
-    storage.set(STORAGE_KEY, JSON.stringify(mergedConfig));
+    setItem(STORAGE_KEY, JSON.stringify(mergedConfig));
   } catch (e) {
     console.error('Failed to save config:', e);
   }
@@ -77,5 +51,5 @@ export function saveConfig(config) {
  * Reset configuration to defaults.
  */
 export function resetConfig() {
-  storage.remove(STORAGE_KEY);
+  removeItem(STORAGE_KEY);
 }
