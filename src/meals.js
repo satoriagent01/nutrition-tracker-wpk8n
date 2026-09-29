@@ -1,7 +1,9 @@
 /**
- * Meal planning management using localStorage.
+ * Meal planning management using storage abstraction.
  * Provides create, add product, get, and getAll operations for meals.
  */
+
+import { getItem, setItem } from './storage.js';
 
 const STORAGE_KEY = 'nutrition_tracker_meals';
 
@@ -11,7 +13,7 @@ const STORAGE_KEY = 'nutrition_tracker_meals';
  */
 function getAllMealsFromStorage() {
   try {
-    const data = localStorage.getItem(STORAGE_KEY);
+    const data = getItem(STORAGE_KEY);
     return data ? JSON.parse(data) : [];
   } catch {
     return [];
@@ -23,7 +25,7 @@ function getAllMealsFromStorage() {
  * @param {Array} meals - Array of meal objects
  */
 function saveMealsToStorage(meals) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(meals));
+  setItem(STORAGE_KEY, JSON.stringify(meals));
 }
 
 /**
